@@ -1,0 +1,82 @@
+// Online Attendance Management System
+// Sankar Matriculation School, Sankagiri West, Namakkal District
+//
+// Note: SQLite does not support Prisma enums, so Role / AttendanceStatus
+// are stored as validated strings ("ADMIN" | "TEACHER", "PRESENT" | "ABSENT" | "LEAVE").
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String       @id @default(cuid())
+  username         String       @unique
+  passwordHash     String
+  name             String
+  role             String       @default("TEACHER") // ADMIN | TEACHER
+  active           Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  markedAttendance Attendance[] @relation("MarkedBy")
+
+  @@index([role])
+}
+
+model ClassSection {
+  id        String       @id @default(cuid())
+  name      String // e.g. "1", "2", ... "10"
+  section   String       @default("A") // e.g. "A", "B"
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  students  Student[]
+
+  @@unique([name, section])
+  @@index([name])
+}
+
+model Subject {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  code      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Student {
+  id             String        @id @default(cuid())
+  admissionNo    String        @unique
+  name           String
+  gender         String? // MALE | FEMALE | OTHER
+  guardianName   String?
+  contact        String?
+  active         Boolean       @default(true)
+  classSectionId String?
+  classSection   ClassSection? @relation(fields: [classSectionId], references: [id])
+  attendance     Attendance[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([name])
+  @@index([classSectionId])
+}
+
+model Attendance {
+  id         String   @id @default(cuid())
+  studentId  String
+  date       String // ISO date "YYYY-MM-DD" (local to school)
+  status     String // PRESENT | ABSENT | LEAVE
+  markedById String?
+  markedBy   User?    @relation("MarkedBy", fields: [markedById], references: [id], onDelete: SetNull)
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([studentId, date])
+  @@index([date])
+  @@index([status])
+}
