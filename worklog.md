@@ -66,3 +66,20 @@ Stage Summary:
 - Repo is Vercel-ready: Postgres schema, correct build scripts, env template, secrets untracked.
 - Sandbox runs PG 17.4 on port 5433 (start with `bun scripts/db-server.ts`, then export DATABASE_URL=postgresql://postgres:postgres@localhost:5433/sms before `bun run dev`).
 - User steps remaining (account-bound, can't be done from sandbox): create Neon DB, push to GitHub, import in Vercel, set DATABASE_URL + SESSION_SECRET, run seed locally against Neon.
+
+---
+Task ID: 4
+Agent: main (Z.ai Code orchestrator)
+Task: Package the project as a downloadable, Vercel-ready folder (user asked: "Can you give me the folder I need to download onto my system?").
+
+Work Log:
+- Confirmed repo was already Vercel-ready (Task 3: postgresql schema, conditional standalone, postinstall prisma generate). Verified `z-ai-web-dev-sdk@0.0.18` IS public on npm (dep installs fine on Vercel), no git remote configured, branch `main`.
+- `package.json`: cross-platform scripts (`dev` = plain `next dev -p 3000` — old `| tee` breaks on Windows cmd; `start` = `next start`; `build` = `prisma generate && next build` for bulletproof Vercel builds), added `"jose": "^5.9.6"` (was only a transitive dep via next-auth — fresh npm install would break `src/lib/auth.ts`), added `tsx` devDep + `"db:seed"` script so `npm run db:seed` works for npm users.
+- Rewrote `.env.example` user-facing (Neon pooled URL + SESSION_SECRET generation command). Wrote root `README.md`: local quickstart, Neon → GitHub → Vercel step-by-step, env var table, demo logins, troubleshooting (P1001, 500 on login, SESSION_SECRET constancy, Neon cold starts).
+- Repo cleanup: `git rm --cached` + gitignore for `.zscripts/`, `mini-services/`, `bun.lock` (stale lockfile would fail Vercel frozen-lockfile after package.json edits); `git rm` template leftover `download/`. Removed files stay on disk for sandbox use. Gitignored `/public/*.zip`.
+- Built `public/sms-attendance.zip` (1.6MB, 583 files) = full workdir + `.git` (git history included so user can `git remote add` + push immediately). GOTCHAS hit: first zip was 42MB because rsync re-included gitignored-but-present `skills/` (50MB design templates) and `bun.lock`; also `zip -r` into an existing archive only adds/updates and never deletes stale entries — must `rm` the zip before re-creating.
+- Verified zip contents (correct package.json/scripts/deps, postgresql schema, no .env / skills / node_modules, staged `git status` clean at commit 33b1488, no remotes), `curl -sI /sms-attendance.zip` → 200 `application/zip`, app root 200, dev.log healthy.
+
+Stage Summary:
+- Downloadable Vercel-ready package at `/public/sms-attendance.zip` (served at `/sms-attendance.zip`) — extract, `npm install`, Neon `.env`, `db:push` + `db:seed`, `npm run dev`; deploy via GitHub import with DATABASE_URL + SESSION_SECRET.
+- Repo (branch `main`, HEAD 33b1488) is clean and push-ready; README.md is the user's single source of instructions.
