@@ -1,6 +1,6 @@
 /** Shared types for the Attendance Management System frontend. */
 
-export type Role = "ADMIN" | "TEACHER";
+export type Role = "ADMIN" | "TEACHER" | "STUDENT";
 export type AttStatus = "PRESENT" | "ABSENT" | "LEAVE";
 
 export interface SessionUser {
@@ -8,6 +8,8 @@ export interface SessionUser {
   username: string;
   name: string;
   role: Role;
+  /** Set only for STUDENT sessions — the Student record id. */
+  studentId?: string;
 }
 
 export interface ClassSection {
@@ -78,6 +80,29 @@ export interface DashboardData {
     unmarked: number;
     pct: number | null;
   };
+}
+
+export interface StudentPortalData {
+  student: {
+    id: string;
+    name: string;
+    admissionNo: string;
+    username: string | null;
+    classSection: { name: string; section: string } | null;
+  };
+  overall: { present: number; absent: number; leave: number; total: number; pct: number | null };
+  thisMonth: { present: number; absent: number; leave: number; total: number; pct: number | null };
+  months: {
+    key: string;
+    label: string;
+    present: number;
+    absent: number;
+    leave: number;
+    total: number;
+    pct: number | null;
+  }[];
+  todayStatus: AttStatus | null;
+  recent: { date: string; status: AttStatus }[];
 }
 
 export const STATUS_LABELS: Record<AttStatus, string> = {

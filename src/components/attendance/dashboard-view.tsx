@@ -127,7 +127,7 @@ export function DashboardView({
           return (
             <Card key={s.label}>
               <CardContent className="p-4 flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </div>
                 <div className="min-w-0">

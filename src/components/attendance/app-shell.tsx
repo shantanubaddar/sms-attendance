@@ -1,14 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
+import Image from "next/image";
 import {
-  School,
   LogOut,
   LayoutDashboard,
   ClipboardCheck,
   Users,
   BarChart3,
   Settings,
+  GraduationCap,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,12 +19,16 @@ import type { SessionUser } from "./types";
 
 export type ViewKey = "dashboard" | "attendance" | "students" | "reports" | "admin";
 
-const NAV: { key: ViewKey; label: string; icon: React.ElementType; adminOnly?: boolean }[] = [
+const STAFF_NAV: { key: ViewKey; label: string; icon: React.ElementType; adminOnly?: boolean }[] = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "attendance", label: "Mark Attendance", icon: ClipboardCheck },
   { key: "students", label: "Students", icon: Users },
   { key: "reports", label: "Reports", icon: BarChart3 },
   { key: "admin", label: "Manage", icon: Settings, adminOnly: true },
+];
+
+const STUDENT_NAV: { key: ViewKey; label: string; icon: React.ElementType }[] = [
+  { key: "dashboard", label: "My Attendance", icon: GraduationCap },
 ];
 
 export function AppShell({
@@ -39,7 +44,10 @@ export function AppShell({
   onLogout: () => void;
   children: React.ReactNode;
 }) {
-  const items = useMemo(() => NAV.filter((n) => !n.adminOnly || user.role === "ADMIN"), [user.role]);
+  const items = useMemo(() => {
+    if (user.role === "STUDENT") return STUDENT_NAV;
+    return STAFF_NAV.filter((n) => !n.adminOnly || user.role === "ADMIN");
+  }, [user.role]);
   const initials = useMemo(
     () =>
       user.name
@@ -57,9 +65,14 @@ export function AppShell({
         <div className="mx-auto max-w-6xl w-full px-3 sm:px-6">
           <div className="flex h-14 items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="h-9 w-9 rounded-lg bg-emerald-600 flex items-center justify-center shrink-0">
-                <School className="h-5 w-5 text-white" aria-hidden="true" />
-              </div>
+              <Image
+                src="/logo-mark.png"
+                alt="Sankar Matriculation School logo"
+                width={36}
+                height={36}
+                priority
+                className="h-9 w-9 object-contain shrink-0"
+              />
               <div className="min-w-0">
                 <p className="text-sm font-semibold leading-tight truncate">
                   Sankar Matriculation School
@@ -78,8 +91,17 @@ export function AppShell({
                   </p>
                 </div>
               </div>
-              <Badge variant={user.role === "ADMIN" ? "default" : "secondary"} className="shrink-0">
-                {user.role === "ADMIN" ? "Admin" : "Teacher"}
+              <Badge
+                variant={user.role === "ADMIN" ? "default" : "secondary"}
+                className={cn(
+                  "shrink-0",
+                  user.role === "TEACHER" &&
+                    "border border-lime-600/40 bg-lime-600/10 text-lime-700 dark:text-lime-300",
+                  user.role === "STUDENT" &&
+                    "border border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-300"
+                )}
+              >
+                {user.role === "ADMIN" ? "Admin" : user.role === "TEACHER" ? "Teacher" : "Student"}
               </Badge>
               <Button
                 variant="ghost"
@@ -107,7 +129,7 @@ export function AppShell({
                   className={cn(
                     "inline-flex items-center gap-1.5 h-9 px-3 rounded-md text-sm whitespace-nowrap transition-colors min-h-[36px]",
                     active
-                      ? "bg-emerald-600 text-white font-medium"
+                      ? "bg-primary text-primary-foreground font-medium"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >

@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAuth, todayStr } from "@/lib/api-helpers";
+import { requireStaff, todayStr } from "@/lib/api-helpers";
 
 /**
  * GET /api/dashboard — headline stats for the dashboard.
  * Auth: teacher + admin.
  */
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth(req);
+  const auth = await requireStaff(req);
   if ("res" in auth) return auth.res;
 
   const today = todayStr();

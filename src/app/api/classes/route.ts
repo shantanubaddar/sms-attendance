@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAuth, requireAdmin } from "@/lib/api-helpers";
+import { requireStaff, requireAdmin } from "@/lib/api-helpers";
 
 /**
  * GET /api/classes — list classes with active student counts. Auth: any.
  */
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth(req);
+  const auth = await requireStaff(req);
   if ("res" in auth) return auth.res;
 
   const classes = await db.classSection.findMany({

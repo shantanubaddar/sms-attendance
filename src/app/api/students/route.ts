@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAuth, requireAdmin } from "@/lib/api-helpers";
+import { requireStaff, requireAdmin } from "@/lib/api-helpers";
 
 /**
  * GET /api/students?search=&classId=&active=
  * Returns students (with overall attendance stats) — auth: teacher + admin.
  */
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth(req);
+  const auth = await requireStaff(req);
   if ("res" in auth) return auth.res;
 
   const { searchParams } = new URL(req.url);

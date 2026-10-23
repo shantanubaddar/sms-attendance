@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAuth, isDateStr, todayStr } from "@/lib/api-helpers";
+import { requireStaff, isDateStr, todayStr } from "@/lib/api-helpers";
 
 /**
  * GET /api/attendance?classId=&date=
@@ -8,7 +8,7 @@ import { requireAuth, isDateStr, todayStr } from "@/lib/api-helpers";
  * Auth: teacher + admin.
  */
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth(req);
+  const auth = await requireStaff(req);
   if ("res" in auth) return auth.res;
 
   const { searchParams } = new URL(req.url);
@@ -54,7 +54,7 @@ const VALID_STATUSES = new Set(["PRESENT", "ABSENT", "LEAVE"]);
  * Auth: teacher + admin.
  */
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth(req);
+  const auth = await requireStaff(req);
   if ("res" in auth) return auth.res;
 
   const body = await req.json().catch(() => null);

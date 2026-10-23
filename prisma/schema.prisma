@@ -55,6 +55,8 @@ model Student {
   guardianName   String?
   contact        String?
   active         Boolean       @default(true)
+  username       String?       @unique // student login (e.g. admission no, lowercase)
+  passwordHash   String? // scrypt hash; null = no portal access yet
   classSectionId String?
   classSection   ClassSection? @relation(fields: [classSectionId], references: [id])
   attendance     Attendance[]

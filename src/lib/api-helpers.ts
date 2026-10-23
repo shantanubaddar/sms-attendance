@@ -27,6 +27,30 @@ export async function requireAdmin(
   return { user };
 }
 
+/** Requires an authenticated staff member (ADMIN or TEACHER). */
+export async function requireStaff(
+  req: Request
+): Promise<{ user: SessionUser } | { res: NextResponse }> {
+  const user = await getSessionUser(req);
+  if (!user) return { res: jsonError("Not authenticated", 401) };
+  if (user.role !== "ADMIN" && user.role !== "TEACHER") {
+    return { res: jsonError("Staff access required", 403) };
+  }
+  return { user };
+}
+
+/** Requires an authenticated STUDENT (with a linked student record). */
+export async function requireStudent(
+  req: Request
+): Promise<{ user: SessionUser } | { res: NextResponse }> {
+  const user = await getSessionUser(req);
+  if (!user) return { res: jsonError("Not authenticated", 401) };
+  if (user.role !== "STUDENT" || !user.studentId) {
+    return { res: jsonError("Student access required", 403) };
+  }
+  return { user };
+}
+
 export function hasRole(user: SessionUser, role: Role): boolean {
   return user.role === role;
 }

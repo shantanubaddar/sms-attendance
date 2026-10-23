@@ -120,6 +120,9 @@ async function main() {
           guardianName: `${pick(LAST_NAMES)} ${pick(FIRST_NAMES)}`,
           contact: `9${Math.floor(100000000 + Math.random() * 899999999)}`,
           classSectionId: classes[ci].id,
+          // student portal login: admission number (lowercase) + shared demo password
+          username: `sms${String(admNo - 1).padStart(4, "0")}`,
+          passwordHash: hashPassword("student123"),
         },
       });
       students.push({ id: student.id, classIdx: ci });
@@ -174,6 +177,7 @@ async function main() {
     `Done. Users: ${counts[0]}, Classes: ${counts[1]}, Students: ${counts[2]}, Attendance records: ${counts[3]}`
   );
   console.log("Logins -> admin/admin123 | teacher1/teacher123 | teacher2/teacher123");
+  console.log("Students -> admission no (e.g. SMS0001, case-insensitive) / student123");
 }
 
 main()

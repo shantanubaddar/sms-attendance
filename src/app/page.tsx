@@ -9,6 +9,7 @@ import { AttendanceView } from "@/components/attendance/attendance-view";
 import { StudentsView } from "@/components/attendance/students-view";
 import { ReportsView } from "@/components/attendance/reports-view";
 import { AdminView } from "@/components/attendance/admin-view";
+import { StudentView } from "@/components/attendance/student-view";
 import { api } from "@/components/attendance/api";
 import type { SessionUser } from "@/components/attendance/types";
 
@@ -52,7 +53,7 @@ export default function Page() {
   if (booting) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3">
-        <Loader2 className="h-6 w-6 animate-spin text-emerald-600" aria-hidden="true" />
+        <Loader2 className="h-6 w-6 animate-spin text-primary" aria-hidden="true" />
         <p className="text-sm text-muted-foreground">Loading attendance system…</p>
       </div>
     );
@@ -72,7 +73,9 @@ export default function Page() {
 
   return (
     <AppShell user={user} view={view} onViewChange={handleViewChange} onLogout={handleLogout}>
-      {view === "dashboard" ? (
+      {user.role === "STUDENT" ? (
+        <StudentView user={user} refreshKey={refreshKey} />
+      ) : view === "dashboard" ? (
         <DashboardView
           user={user}
           refreshKey={refreshKey}

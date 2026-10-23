@@ -14,13 +14,15 @@ const SECRET = new TextEncoder().encode(
   process.env.SESSION_SECRET || "sankar-sms-dev-secret-change-in-production"
 );
 
-export type Role = "ADMIN" | "TEACHER";
+export type Role = "ADMIN" | "TEACHER" | "STUDENT";
 
 export interface SessionUser {
   id: string;
   username: string;
   name: string;
   role: Role;
+  /** Set only for STUDENT sessions — the Student record id. */
+  studentId?: string;
 }
 
 // ---------- password hashing (scrypt, no external deps) ----------
@@ -42,7 +44,13 @@ export function verifyPassword(password: string, stored: string): boolean {
 // ---------- JWT session ----------
 
 export async function signSession(user: SessionUser): Promise<string> {
-  return new SignJWT({ username: user.username, name: user.name, role: user.role })
+  const claims: Record<string, string> = {
+    username: user.username,
+    name: user.name,
+    role: user.role,
+  };
+  if (user.studentId) claims.studentId = user.studentId;
+  return new SignJWT(claims)
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.id)
     .setIssuedAt()
@@ -54,12 +62,14 @@ export async function verifySession(token: string): Promise<SessionUser | null> 
   try {
     const { payload } = await jwtVerify(token, SECRET);
     if (!payload.sub || typeof payload.role !== "string") return null;
-    if (payload.role !== "ADMIN" && payload.role !== "TEACHER") return null;
+    const role = payload.role;
+    if (role !== "ADMIN" && role !== "TEACHER" && role !== "STUDENT") return null;
     return {
       id: payload.sub,
       username: String(payload.username ?? ""),
       name: String(payload.name ?? ""),
-      role: payload.role,
+      role,
+      studentId: typeof payload.studentId === "string" ? payload.studentId : undefined,
     };
   } catch {
     return null;
