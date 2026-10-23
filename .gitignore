@@ -61,3 +61,11 @@ server.log
 # keep the env example in git
 !.env.example
 /.pgbin
+
+# downloadable deployment package (built artifact, not source)
+/public/*.zip
+
+# sandbox-only helpers (not part of the deployable app)
+/.zscripts
+/mini-services
+bun.lock
