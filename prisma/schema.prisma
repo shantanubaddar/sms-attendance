@@ -1,15 +1,16 @@
 // Online Attendance Management System
 // Sankar Matriculation School, Sankagiri West, Namakkal District
 //
-// Note: SQLite does not support Prisma enums, so Role / AttendanceStatus
-// are stored as validated strings ("ADMIN" | "TEACHER", "PRESENT" | "ABSENT" | "LEAVE").
+// Database: PostgreSQL (Neon free tier for production / Vercel).
+// SQLite has no enums, so Role / AttendanceStatus are stored as
+// validated strings ("ADMIN" | "TEACHER" | "STUDENT", "PRESENT" | "ABSENT" | "LEAVE").
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
