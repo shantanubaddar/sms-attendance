@@ -45,3 +45,24 @@ Stage Summary:
 - Student portal is live: admission-no login, read-only personal attendance (overall/month/6-month trend/recent records), fully RBAC-isolated from staff APIs.
 - Demo logins now: admin/admin123 · teacher1|teacher2/teacher123 · any student SMS0001–SMS0050 / student123.
 - Not yet done (candidates next): admin UI to set/reset student passwords on student create/edit, Vercel deploy (sqlite→postgres provider swap + SESSION_SECRET), docs deliverables.
+
+---
+Task ID: 3
+Agent: main (Z.ai Code orchestrator)
+Task: Make the app deployable on Vercel — migrate from SQLite to PostgreSQL (Neon), fix build config for Vercel, verify the app end-to-end against a real Postgres, and prepare the git repo for push.
+
+Work Log:
+- Changed `prisma/schema.prisma` datasource provider sqlite → postgresql (schema models unchanged — fully portable).
+- `package.json`: `build` is now plain `next build` (Vercel-safe); standalone-copy logic moved to `build:standalone`; added `postinstall: prisma generate` so Vercel builds generate the Prisma client.
+- `next.config.ts`: `output: "standalone"` now conditional (`process.env.VERCEL ? {} : { output: "standalone" }`) — standalone is for sandbox/self-host only, must be off on Vercel.
+- `src/lib/db.ts`: Prisma query logging disabled when NODE_ENV=production (clean Vercel logs).
+- `.env.example` added (gitignored `.env*` excepted via `!.env.example`) documenting local + Neon pooled URL and SESSION_SECRET. `.gitignore`: added `/.pgdata`, `/.pgbin`, `/db`, `!.env.example`. Untracked `.env` and `db/custom.db` from git (were committed in initial snapshot; old .env held only the sqlite file path, no secrets).
+- Sandbox has no postgres, no docker, no sudo; npm `embedded-postgres` binary needed libicui18n.so.60 (absent, Debian trixie has ICU 76). Solution: Zonky self-contained PG 17.4 binaries from Maven Central (~15MB, statically linked, no ICU) in `./.pgbin`, cluster in `./.pgdata`, port 5433, db `sms`, user postgres/postgres. `scripts/db-server.ts` (re)starts it idempotently and creates the DB (uses `pg` dev dep; zonky ships no psql).
+- GOTCHA: sandbox shell exports `DATABASE_URL=file:...` which overrides `.env` (real env > dotenv). Prisma/bun both follow that precedence. Locally must export the PG URL inline before db:push/seed/dev. On Vercel this conflict can't occur (env comes from project settings only).
+- Verified against real Postgres: `db:push` OK, seed OK (3 users/50 students/1200 records), dev server restarted with PG env, full curl matrix (admin+student login, /api/me/student data, dashboard, attendance roster, class report, student→staff 403) all pass, agent-browser login → student portal renders fresh PG data (95.8%). Lint clean. NOTE: `next build` not run in sandbox per environment rule — first real production build happens on Vercel; config changes follow Vercel's documented setup.
+- Git repo committed (b5c6d2f) ready for `git push` to GitHub.
+
+Stage Summary:
+- Repo is Vercel-ready: Postgres schema, correct build scripts, env template, secrets untracked.
+- Sandbox runs PG 17.4 on port 5433 (start with `bun scripts/db-server.ts`, then export DATABASE_URL=postgresql://postgres:postgres@localhost:5433/sms before `bun run dev`).
+- User steps remaining (account-bound, can't be done from sandbox): create Neon DB, push to GitHub, import in Vercel, set DATABASE_URL + SESSION_SECRET, run seed locally against Neon.
